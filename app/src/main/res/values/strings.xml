@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Podcast-vk</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <integer name="com_vk_sdk_AppId">7929251</integer>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
