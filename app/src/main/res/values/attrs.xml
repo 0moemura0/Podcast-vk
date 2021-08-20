@@ -2,14 +2,42 @@
 
 <resources>
     <declare-styleable name="AudioWaveView">
-        <attr format="color" name="waveColor"/>
-        <attr format="dimension" name="chunkWidth"/>
-        <attr format="dimension" name="chunkHeight"/>
-        <attr format="dimension" name="minChunkHeight"/>
-        <attr format="dimension" name="chunkRadius"/>
-        <attr format="dimension" name="chunkSpacing"/>
-        <attr format="float" name="progress"/>
-        <attr format="boolean" name="animateExpansion"/>
-        <attr format="boolean" name="touchable"/>
+        <attr format="color" name="waveColor" />
+        <attr format="dimension" name="chunkWidth" />
+        <attr format="dimension" name="chunkHeight" />
+        <attr format="dimension" name="minChunkHeight" />
+        <attr format="dimension" name="chunkRadius" />
+        <attr format="dimension" name="chunkSpacing" />
+        <attr format="float" name="progress" />
+        <attr format="boolean" name="animateExpansion" />
+        <attr format="boolean" name="touchable" />
     </declare-styleable>
+
+    <declare-styleable name="PlayerView">
+        <attr format="color" name="text_audio_title_color" />
+        <attr format="color" name="text_audio_current_duration_color" />
+        <attr format="color" name="text_audio_duration_color" />
+        <attr format="color" name="progress_color" />
+
+        <attr format="color" name="play_icon_color" />
+        <attr format="color" name="pause_icon_color" />
+        <attr format="color" name="next_icon_color" />
+        <attr format="color" name="previous_icon_color" />
+        <attr format="color" name="random_icon_color" />
+        <attr format="color" name="repeat_icon_color" />
+        <attr format="color" name="repeat_one_icon_color" />
+
+        <attr format="reference" name="play_icon" />
+        <attr format="reference" name="pause_icon" />
+        <attr format="reference" name="next_icon" />
+        <attr format="reference" name="previous_icon" />
+        <attr format="reference" name="random_icon" />
+        <attr format="reference" name="repeat_icon" />
+        <attr format="reference" name="repeat_one_icon" />
+
+        <attr format="boolean" name="show_random_button" />
+        <attr format="boolean" name="show_repeat_button" />
+
+    </declare-styleable>
+
 </resources>

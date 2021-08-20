@@ -1,67 +1,174 @@
 package com.example.podcast_vk
 
-import android.animation.ObjectAnimator
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.LinearInterpolator
-import androidx.core.content.ContextCompat
+import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
-import com.example.podcast_vk.databinding.FragmentPodcastBinding
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.podcast_vk.network.RSSController
+import com.example.podcast_vk.view.player.jcplayer.model.PlayerAudio
+import com.example.podcast_vk.view.player.jcplayer.view.PlayerView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.android.synthetic.main.fragment_podcast.*
 
-class PodcastFragment : Fragment() {
+import java.util.ArrayList
 
-    private var _binding: FragmentPodcastBinding? = null
 
+class PodcastFragment : Fragment(R.layout.fragment_podcast) {
     // This property is only valid between onCreateView and
-// onDestroyView.
-    private val binding get() = _binding!!
+// onDestroyVie
+    private val viewModel: PodcastViewModel by activityViewModels()
 
-    private val progressAnim: ObjectAnimator by lazy {
-        ObjectAnimator.ofFloat(binding.wave, "progress", 0F, 100F).apply {
-            interpolator = LinearInterpolator()
-            duration = 1000
-        }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-
-        val s = inflater.inflate(R.layout.fragment_podcast, container, false)
-        _binding = FragmentPodcastBinding.inflate(inflater, container, false)
-        val view = binding.root
-        return view
-    }
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.play.setOnClickListener {
-            inflateWave()
-        }
+//        binding.play.setOnClickListener {
+//
+//        }
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
 
+        bottomSheetBehavior.addBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
 
-        binding.wave.onProgressChanged = { progress, byUser ->
-            Log.e("wave", "Progress set: $progress, and it's $byUser that user did this")
-
-            if (progress == 100F && !byUser) {
-                binding.wave.waveColor =
-                    ContextCompat.getColor(requireContext(), R.color.accentBlue)
-                binding.wave.isTouchable = true
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                // handle onSlide
             }
-        }
 
-        binding.wave.onStartTracking = {
-            Log.e("wave", "Started tracking from: $it")
-        }
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                when (newState) {
+                    BottomSheetBehavior.STATE_COLLAPSED -> Toast.makeText(
+                        context,
+                        "STATE_COLLAPSED",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    BottomSheetBehavior.STATE_EXPANDED -> Toast.makeText(
+                        context,
+                        "STATE_EXPANDED",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    BottomSheetBehavior.STATE_DRAGGING -> Toast.makeText(
+                        context,
+                        "STATE_DRAGGING",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    BottomSheetBehavior.STATE_SETTLING -> Toast.makeText(
+                        context,
+                        "STATE_SETTLING",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    BottomSheetBehavior.STATE_HIDDEN -> Toast.makeText(
+                        context,
+                        "STATE_HIDDEN",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    else -> Toast.makeText(context, "OTHER_STATE", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+        })
+        tvSubtitle.layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+        tvSubtitle.adapter = ReactionAdapter()
 
-        binding.wave.onStopTracking = {
-            Log.e("wave", "Progress set: $it")
+//
+        val jcplayerView: PlayerView = view.findViewById(R.id.player);
+
+
+        val jcAudios: ArrayList<PlayerAudio> = ArrayList<PlayerAudio>()
+        jcAudios.add(
+            PlayerAudio.createFromURL(
+                "url audio",
+                "https://vk.com/podcast-147415323_456239591.mp3"
+            )
+        )
+
+        jcplayerView.initPlaylist(jcAudios, null)
+
+        jcAudios.add(
+            PlayerAudio.createFromAssets("sample.wav")
+        )
+
+
+
+        iv_stat.setOnClickListener {
+            findNavController().navigate(R.id.action_podcastFragment_to_statisticsFragment)
         }
+        jcplayerView.playAudio(jcAudios[0])
+
+//        ArrayList<PlayerAudio> jcAudios = new ArrayList<>();
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 1", "49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 2", "56.mid"));
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 3", "a_34.mp3"));
+//        jcAudios.add(PlayerAudio.createFromRaw("Raw audio 1", R.raw.a_34));
+        //        player.playAudio(player.getMyPlaylist().get(0));
+
+//        ArrayList<PlayerAudio> jcAudios = new ArrayList<>();
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 1", "49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 2", "56.mid"));
+//        jcAudios.add(PlayerAudio.createFromAssets("Asset audio 3", "a_34.mp3"));
+//        jcAudios.add(PlayerAudio.createFromRaw("Raw audio 1", R.raw.a_34));
+//        jcAudios.add(PlayerAudio.createFromRaw("Raw audio 2", R.raw.a_203))
+        //jcAudios.add(PlayerAudio.createFromFilePath("File directory audio", this.getFilesDir() + "/" + "CANTO DA GRAÚNA.mp3"));
+        //jcAudios.add(PlayerAudio.createFromAssets("I am invalid audio", "aaa.mid")); // invalid assets file
+//        player.initPlaylist(jcAudios);
+
+
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "13.mid"));
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "123123.mid")); // invalid file path
+//        jcAudios.add(PlayerAudio.createFromAssets("49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromRaw(R.raw.a_203));
+//        jcAudios.add(PlayerAudio.createFromRaw("a_34", R.raw.a_34));
+//        player.initWithTitlePlaylist(jcAudios, "Awesome music");
+
+
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "13.mid"));
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "123123.mid")); // invalid file path
+//        jcAudios.add(PlayerAudio.createFromAssets("49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromRaw(R.raw.a_203));
+//        jcAudios.add(PlayerAudio.createFromRaw("a_34", R.raw.a_34));
+//        player.initAnonPlaylist(jcAudios);
+
+//        Adding new audios to playlist
+//        player.addAudio(PlayerAudio.createFromURL("url audio","http://www.villopim.com.br/android/Music_01.mp3"));
+//        player.addAudio(PlayerAudio.createFromAssets("49.v4.mid"));
+//        player.addAudio(PlayerAudio.createFromRaw(R.raw.a_34));
+//        player.addAudio(PlayerAudio.createFromFilePath(this.getFilesDir() + "/" + "121212.mmid"));
+
+        //jcAudios.add(PlayerAudio.createFromFilePath("File directory audio", this.getFilesDir() + "/" + "CANTO DA GRAÚNA.mp3"));
+        //jcAudios.add(PlayerAudio.createFromAssets("I am invalid audio", "aaa.mid")); // invalid assets file
+//        player.initPlaylist(jcAudios);
+
+
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "13.mid"));
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "123123.mid")); // invalid file path
+//        jcAudios.add(PlayerAudio.createFromAssets("49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromRaw(R.raw.a_203));
+//        jcAudios.add(PlayerAudio.createFromRaw("a_34", R.raw.a_34));
+//        player.initWithTitlePlaylist(jcAudios, "Awesome music");
+
+
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "13.mid"));
+//        jcAudios.add(PlayerAudio.createFromFilePath("test", this.getFilesDir() + "/" + "123123.mid")); // invalid file path
+//        jcAudios.add(PlayerAudio.createFromAssets("49.v4.mid"));
+//        jcAudios.add(PlayerAudio.createFromRaw(R.raw.a_203));
+//        jcAudios.add(PlayerAudio.createFromRaw("a_34", R.raw.a_34));
+//        player.initAnonPlaylist(jcAudios);
+
+//        Adding new audios to playlist
+//        player.addAudio(PlayerAudio.createFromURL("url audio","http://www.villopim.com.br/android/Music_01.mp3"));
+//        player.addAudio(PlayerAudio.createFromAssets("49.v4.mid"));
+//        player.addAudio(PlayerAudio.createFromRaw(R.raw.a_34));
+//        player.addAudio(PlayerAudio.createFromFilePath(this.getFilesDir() + "/" + "121212.mmid"));
+//        player.initPlaylist(jcAudios, this)
+
+
+        val contreller = RSSController()
+        contreller.start()
 
 //    wave.onProgressListener = object : OnProgressListener {
 //      override fun onProgressChanged(progress: Float, byUser: Boolean) {
@@ -76,11 +183,5 @@ class PodcastFragment : Fragment() {
 //        Log.e("wave", "Stopped tracking at: $progress")
 //      }
 //    }
-    }
-
-    private fun inflateWave() {
-        binding.wave.setRawData(
-            resources.assets.open("sample.wav").readBytes()
-        ) { progressAnim.start() }
     }
 }
