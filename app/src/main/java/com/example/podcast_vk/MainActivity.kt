@@ -20,14 +20,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        btnBottomSheetPersistent.setOnClickListener {
-//            if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED)
-//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-//            else
-//                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-//        }
-
-        VK.login(this, arrayListOf(VKScope.WALL, VKScope.FRIENDS))
+        if(!viewModel.getLogin())
+            VK.login(this, arrayListOf(VKScope.WALL, VKScope.FRIENDS))
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
@@ -37,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val callback = object : VKAuthCallback {
             override fun onLogin(token: VKAccessToken) {
-
+                viewModel.setLogin()
             }
 
             override fun onLoginFailed(errorCode: Int) {

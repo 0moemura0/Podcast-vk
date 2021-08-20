@@ -8,19 +8,27 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ReactionAdapter : RecyclerView.Adapter<ReactionAdapter.ReactionViewHolder>() {
 
-    val keys = listOf(R.drawable.i1, R.drawable.image2, R.drawable.imag3, R.drawable.image4)
+    val keys = listOf(
+        R.drawable.emoji_1,
+        R.drawable.emoji_2,
+        R.drawable.emoji_3,
+        R.drawable.emoji_4,
+        R.drawable.emoji_7,
+        R.drawable.emoji_6,
+        R.drawable.emoji_8,
+        R.drawable.emoji_5
+    )
 
-    class ReactionViewHolder(val root: View) : RecyclerView.ViewHolder(root) {
+    class ReactionViewHolder(root: View) : RecyclerView.ViewHolder(root) {
 
         val back = root.findViewById<View>(R.id.background)
         val image = root.findViewById<ImageView>(R.id.emoji)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReactionViewHolder {
-        val holder = ReactionViewHolder(
+        return ReactionViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.item_reaction, parent, false)
         )
-        return holder
     }
 
     override fun onBindViewHolder(holder: ReactionViewHolder, position: Int) {

@@ -1,4 +1,4 @@
-package com.example.podcast_vk.view.player.jcplayer.view
+package com.example.podcast_vk.view.view
 
 import android.animation.ObjectAnimator
 import android.content.Context
@@ -8,50 +8,40 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.LinearLayout
-import androidx.annotation.DrawableRes
 import androidx.core.content.res.ResourcesCompat
-import com.example.jean.jcplayer.general.PlayerUtil.toTimeSongString
-import com.example.jean.jcplayer.general.errors.OnInvalidPathListener
 import com.example.podcast_vk.R
-import com.example.podcast_vk.view.player.jcplayer.PlayerManager
-import com.example.podcast_vk.view.player.jcplayer.PlayerManagerListener
-import com.example.podcast_vk.view.player.jcplayer.general.Status
-import com.example.podcast_vk.view.player.jcplayer.model.PlayerAudio
+import com.example.podcast_vk.view.player.PlayerManager
+import com.example.podcast_vk.view.player.PlayerManagerListener
+import com.example.podcast_vk.view.player.general.PlayerUtil.toTimeSongString
+import com.example.podcast_vk.view.player.general.Status
+import com.example.podcast_vk.view.player.model.PlayerAudio
 import com.example.podcast_vk.view.wave.OnProgressListener
 import kotlinx.android.synthetic.main.view_player.view.*
 
 
-/**
- * This class is the PlayerAudio View. Handles user interactions and communicates events to [PlayerManager].
- * @author Jean Carlos (Github: @jeancsanchez)
- * @date 12/07/16.
- * Jesus loves you.
- */
 class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
     PlayerManagerListener {
 
-    private val jcPlayerManager: PlayerManager by lazy {
+    private val playerManager: PlayerManager by lazy {
         PlayerManager.getInstance(context).get()!!
     }
 
     val myPlaylist: List<PlayerAudio>
-        get() = jcPlayerManager.playlist
+        get() = playerManager.playlist
 
     val isPlaying: Boolean
-        get() = jcPlayerManager.isPlaying()
+        get() = playerManager.isPlaying()
 
     val isPaused: Boolean
-        get() = jcPlayerManager.isPaused()
+        get() = playerManager.isPaused()
 
     val currentAudio: PlayerAudio?
-        get() = jcPlayerManager.currentAudio
-
-    var onInvalidPathListener: OnInvalidPathListener? = null
+        get() = playerManager.currentAudio
 
     var jcPlayerManagerListener: PlayerManagerListener? = null
         set(value) {
             field = value
-            jcPlayerManager.jcPlayerManagerListener = value
+            playerManager.jcPlayerManagerListener = value
         }
 
 
@@ -97,12 +87,6 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
     private fun setAttributes(attrs: TypedArray) {
         val defaultColor = ResourcesCompat.getColor(resources, android.R.color.black, null)
 
-        txtCurrentMusic?.setTextColor(
-            attrs.getColor(
-                R.styleable.PlayerView_text_audio_title_color,
-                defaultColor
-            )
-        )
         txtCurrentDuration?.setTextColor(
             attrs.getColor(
                 R.styleable.PlayerView_text_audio_current_duration_color,
@@ -130,19 +114,10 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
                 defaultColor
             )
         )
-        btnPlay?.setImageResource(
-            attrs.getResourceId(
-                R.styleable.PlayerView_play_icon,
-                R.drawable.ic_baseline_play_arrow_24
-            )
-        )
+        btnPlay?.setImageResource(R.drawable.ic_baseline_play_arrow_24)
 
-        btnPause?.setImageResource(
-            attrs.getResourceId(
-                R.styleable.PlayerView_pause_icon,
-                R.drawable.ic_pause
-            )
-        )
+
+        btnPause?.setImageResource(R.drawable.ic_pause)
         btnPause?.setColorFilter(
             attrs.getColor(
                 R.styleable.PlayerView_pause_icon_color,
@@ -157,10 +132,7 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
             )
         )
         btnNext?.setImageResource(
-            attrs.getResourceId(
-                R.styleable.PlayerView_next_icon,
-                R.drawable.ic_forward_15_36
-            )
+            R.drawable.ic_forward_15_36
         )
 
         btnPrev?.setColorFilter(
@@ -170,124 +142,24 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
             )
         )
         btnPrev?.setImageResource(
-            attrs.getResourceId(
-                R.styleable.PlayerView_previous_icon,
-                R.drawable.ic_replay_15_36
-            )
+            R.drawable.ic_replay_15_36
         )
-
-        attrs.getBoolean(R.styleable.PlayerView_show_random_button, true).also { showButton ->
-
-        }
-
-        attrs.getBoolean(R.styleable.PlayerView_show_repeat_button, true).also { showButton ->
-
-        }
-
     }
 
-    /**
-     * Initialize the playlist and controls.
-     *
-     * @param playlist List of PlayerAudio objects that you want play
-     * @param jcPlayerManagerListener The view status jcPlayerManagerListener (optional)
-     */
+
     fun initPlaylist(
         playlist: List<PlayerAudio>,
         jcPlayerManagerListener: PlayerManagerListener? = null
     ) {
-        /*Don't sort if the playlist have position number.
-        We need to do this because there is a possibility that the user reload previous playlist
-        from persistence storage like sharedPreference or SQLite.*/
-        if (isAlreadySorted(playlist).not()) {
-            sortPlaylist(playlist)
-        }
-
-        jcPlayerManager.playlist = playlist as ArrayList<PlayerAudio>
-        jcPlayerManager.jcPlayerManagerListener = jcPlayerManagerListener
-        jcPlayerManager.jcPlayerManagerListener = this
+        playerManager.playlist = playlist as ArrayList<PlayerAudio>
+        playerManager.jcPlayerManagerListener = jcPlayerManagerListener
+        playerManager.jcPlayerManagerListener = this
     }
 
-    /**
-     * Initialize an anonymous playlist with a default JcPlayer title for all audios
-     *
-     * @param playlist List of urls strings
-     */
-    fun initAnonPlaylist(playlist: List<PlayerAudio>) {
-        generateTitleAudio(playlist, context.getString(R.string.track_number))
-        initPlaylist(playlist)
-    }
-
-    /**
-     * Initialize an anonymous playlist, but with a custom title for all audios
-     *
-     * @param playlist List of PlayerAudio files.
-     * @param title    Default title for all audios
-     */
-    fun initWithTitlePlaylist(playlist: List<PlayerAudio>, title: String) {
-        generateTitleAudio(playlist, title)
-        initPlaylist(playlist)
-    }
-
-    /**
-     * Add an audio for the playlist. We can track the PlayerAudio by
-     * its id. So here we returning its id after adding to list.
-     *
-     * @param jcAudio audio file generated from [PlayerAudio]
-     * @return jcAudio position.
-     */
-    fun addAudio(jcAudio: PlayerAudio): Int {
-        jcPlayerManager.playlist.let {
-            val lastPosition = it.size
-            jcAudio.position = lastPosition + 1
-
-            if (it.contains(jcAudio).not()) {
-                it.add(lastPosition, jcAudio)
-            }
-
-            return jcAudio.position!!
-        }
-    }
-
-    /**
-     * Remove an audio for the playlist
-     *
-     * @param jcAudio PlayerAudio object
-     */
-    fun removeAudio(jcAudio: PlayerAudio) {
-        jcPlayerManager.playlist.let {
-            if (it.contains(jcAudio)) {
-                if (it.size > 1) {
-                    // play next audio when currently played audio is removed.
-                    if (jcPlayerManager.isPlaying()) {
-                        if (jcPlayerManager.currentAudio == jcAudio) {
-                            it.remove(jcAudio)
-                            pause()
-                            resetPlayerInfo()
-                        } else {
-                            it.remove(jcAudio)
-                        }
-                    } else {
-                        it.remove(jcAudio)
-                    }
-                } else {
-                    //TODO: Maybe we need jcPlayerManager.stopPlay() for stopping the player
-                    it.remove(jcAudio)
-                    pause()
-                    resetPlayerInfo()
-                }
-            }
-        }
-    }
-
-    /**
-     * Plays the give audio.
-     * @param jcAudio The audio to be played.
-     */
     fun playAudio(jcAudio: PlayerAudio) {
         showProgressBar()
 
-        jcPlayerManager.playlist.let {
+        playerManager.playlist.let {
             if (it.contains(jcAudio).not()) {
                 it.add(jcAudio)
             }
@@ -299,31 +171,22 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
                     duration = wave.duration
                 }
             progressAnim.start()
-            jcPlayerManager.playAudio(jcAudio)
+            playerManager.playAudio(jcAudio)
         }
     }
 
-    /**
-     * Shows the play button on player.
-     */
     private fun showPlayButton() {
-        btnPlay?.makeVisible()
-        btnPause?.makeInvisible()
+        btnPlay?.postVisible()
+        btnPause?.postInvisible()
     }
 
-    /**
-     * Shows the pause button on player.
-     */
     private fun showPauseButton() {
-        btnPlay?.makeInvisible()
-        btnPause?.makeVisible()
+        btnPlay?.postInvisible()
+        btnPause?.postVisible()
     }
 
-    /**
-     * Goes to next audio.
-     */
     fun next() {
-        jcPlayerManager.let { player ->
+        playerManager.let { player ->
             player.currentAudio?.let {
                 resetPlayerInfo()
                 showProgressBar()
@@ -338,41 +201,31 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
         }
     }
 
-    /**
-     * Continues the current audio.
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
+
     fun continueAudio() {
         showProgressBar()
 
         try {
-            jcPlayerManager.continueAudio()
+            playerManager.continueAudio()
         } catch (e: Exception) {
             dismissProgressBar()
             e.printStackTrace()
         }
     }
 
-    /**
-     * Pauses the current audio.
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
+
     fun pause() {
-        jcPlayerManager.pauseAudio()
+        playerManager.pauseAudio()
         showPlayButton()
     }
 
 
-    /**
-     * Goes to precious audio.
-     */
-    @Suppress("MemberVisibilityCanBePrivate")
     fun previous() {
         resetPlayerInfo()
         showProgressBar()
 
         try {
-            jcPlayerManager.previousAudio()
+            playerManager.previousAudio()
         } catch (e: Exception) {
             dismissProgressBar()
             e.printStackTrace()
@@ -384,59 +237,30 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
         when (view.id) {
             R.id.btnPlay ->
                 btnPlay?.let {
-                    applyPulseAnimation(it)
                     continueAudio()
                 }
 
             R.id.btnPause -> {
                 btnPause?.let {
-                    applyPulseAnimation(it)
                     pause()
                 }
             }
 
             R.id.btnNext ->
                 btnNext?.let {
-                    applyPulseAnimation(it)
                     next()
                 }
 
             R.id.btnPrev ->
                 btnPrev?.let {
-                    applyPulseAnimation(it)
                     previous()
                 }
-
-
-            else -> { // Repeat case
-                jcPlayerManager.activeRepeat()
-                val active = jcPlayerManager.repeatPlaylist or jcPlayerManager.repeatCurrAudio
-
-
-            }
         }
-    }
-
-    /**
-     * Create a notification player with same playlist with a custom icon.
-     *
-     * @param iconResource icon path.
-     */
-    fun createNotification(@DrawableRes iconResource: Int) {
-        jcPlayerManager.createNewNotification(iconResource)
-    }
-
-    /**
-     * Create a notification player with same playlist with a default icon
-     */
-    fun createNotification() {
-        //jcPlayerManager.createNewNotification(R.drawable.ic)
     }
 
     override fun onPreparedAudio(status: Status) {
         dismissProgressBar()
         resetPlayerInfo()
-        onUpdateTitle(status.playerAudio.title)
 
         val duration = status.duration.toInt()
         wave?.post { wave?.duration = duration.toLong() }
@@ -448,7 +272,7 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
         resetPlayerInfo()
 
         try {
-            jcPlayerManager.nextAudio()
+            playerManager.nextAudio()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -475,34 +299,21 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
     override fun onStopped(status: Status) {
     }
 
-    override fun onJcpError(throwable: Throwable) {
-        // TODO
-//        jcPlayerManager.currentAudio?.let {
-//            onInvalidPathListener?.onPathError(it)
-//        }
-    }
 
     private fun showProgressBar() {
-        progressBarPlayer?.makeVisible()
-        btnPlay?.makeInvisible()
-        btnPause?.makeInvisible()
+        progressBarPlayer?.postVisible()
+        btnPlay?.postInvisible()
+        btnPause?.postInvisible()
     }
 
     private fun dismissProgressBar() {
-        progressBarPlayer?.makeInvisible()
+        progressBarPlayer?.postInvisible()
         showPauseButton()
     }
 
-    private fun onUpdateTitle(title: String) {
-        txtCurrentMusic?.let {
-            it.makeVisible()
-
-            it.post { it.text = title }
-        }
-    }
 
     private fun resetPlayerInfo() {
-        txtCurrentMusic?.post { txtCurrentMusic.text = "" }
+
         wave?.post { wave?.progress = 0F }
         txtDuration?.post { txtDuration.text = context.getString(R.string.play_initial_time) }
         txtCurrentDuration?.post {
@@ -510,15 +321,6 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
         }
     }
 
-    /**
-     * Sorts the playlist.
-     */
-    private fun sortPlaylist(playlist: List<PlayerAudio>) {
-        for (i in playlist.indices) {
-            val jcAudio = playlist[i]
-            jcAudio.position = i
-        }
-    }
 
     /**
      * Check if playlist already sorted or not.
@@ -549,38 +351,26 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
         }
     }
 
-    private fun applyPulseAnimation(view: View?) {
 
-    }
-
-    /**
-     * Kills the player
-     */
     fun kill() {
-        jcPlayerManager.kill()
+        playerManager.kill()
     }
 
 
-    /**
-     * Makes view visible in UI Thread
-     */
-    private fun View.makeVisible() {
+    private fun View.postVisible() {
         post {
             visibility = View.VISIBLE
         }
     }
 
-    /**
-     * Makes view invisible in UI Thread
-     */
-    private fun View.makeInvisible() {
+    private fun View.postInvisible() {
         post {
             visibility = View.GONE
         }
     }
 
     override fun onStartTracking(progress: Float) {
-        if (jcPlayerManager.currentAudio != null) {
+        if (playerManager.currentAudio != null) {
             showProgressBar()
         }
     }
@@ -588,13 +378,13 @@ class PlayerView : LinearLayout, View.OnClickListener, OnProgressListener,
     override fun onStopTracking(progress: Float) {
         dismissProgressBar()
 
-        if (jcPlayerManager.isPaused()) {
+        if (playerManager.isPaused()) {
             showPlayButton()
         }
     }
 
     override fun onProgressChanged(progress: Float, byUser: Boolean) {
-        jcPlayerManager.let {
+        playerManager.let {
             if (byUser) {
                 it.seekTo(progress.toInt())
             }
